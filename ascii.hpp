@@ -409,36 +409,38 @@ inline constexpr InChar const *find_last_not_of_mask_ptr(InChar const *begin, In
     return end;
 }
 
-template <typename In>
-inline constexpr In find_first_not_of_mask(In begin, In end, detail::cls_base_t required)
+template <typename In, typename End>
+inline constexpr In find_first_not_of_mask(In begin, End end, detail::cls_base_t required)
 {
     using in_char = std::remove_cv_t<std::iter_value_t<In>>;
 
     static_assert(std::contiguous_iterator<In>);
+    static_assert(std::sized_sentinel_for<End, In>);
     static_assert(is_supported_ascii_char_v<in_char>);
 
     auto b = detail::to_address_const(begin);
-    auto e = detail::to_address_const(end);
+    auto e = detail::to_address_const(begin + (end - begin));
     auto result_ptr = find_first_not_of_mask_ptr(b, e, required);
     return begin + (result_ptr - b);
 }
 
-template <typename In>
-inline constexpr In find_last_not_of_mask(In begin, In end, detail::cls_base_t required)
+template <typename In, typename End>
+inline constexpr In find_last_not_of_mask(In begin, End end, detail::cls_base_t required)
 {
     using in_char = std::remove_cv_t<std::iter_value_t<In>>;
 
     static_assert(std::contiguous_iterator<In>);
+    static_assert(std::sized_sentinel_for<End, In>);
     static_assert(is_supported_ascii_char_v<in_char>);
 
     auto b = detail::to_address_const(begin);
-    auto e = detail::to_address_const(end);
+    auto e = detail::to_address_const(begin + (end - begin));
     auto result_ptr = find_last_not_of_mask_ptr(b, e, required);
     return begin + (result_ptr - b);
 }
 
-template <typename In>
-inline constexpr bool all_of_flag(In begin, In end, detail::cls_base_t required)
+template <typename In, typename End>
+inline constexpr bool all_of_flag(In begin, End end, detail::cls_base_t required)
 {
     return find_first_not_of_mask(begin, end, required) == end;
 }
@@ -524,8 +526,8 @@ namespace ascii_impl
 {
 struct ascii_find_first_not_of_fn
 {
-    template <typename In>
-    static inline constexpr In operator()(In begin, In end, ascii_classification cls)
+    template <typename In, typename End>
+    static inline constexpr In operator()(In begin, End end, ascii_classification cls)
     {
         return detail::find_first_not_of_mask(begin, end, static_cast<detail::cls_base_t>(cls));
     }
@@ -540,8 +542,8 @@ struct ascii_find_first_not_of_fn
 
 struct ascii_find_last_not_of_fn
 {
-    template <typename In>
-    static inline constexpr In operator()(In begin, In end, ascii_classification cls)
+    template <typename In, typename End>
+    static inline constexpr In operator()(In begin, End end, ascii_classification cls)
     {
         return detail::find_last_not_of_mask(begin, end, static_cast<detail::cls_base_t>(cls));
     }
@@ -556,8 +558,8 @@ struct ascii_find_last_not_of_fn
 
 struct ascii_is_any_fn
 {
-    template <typename In>
-    static inline constexpr bool operator()(In begin, In end)
+    template <typename In, typename End>
+    static inline constexpr bool operator()(In begin, End end)
     {
         return ascii_find_first_not_of_fn::operator()(begin, end, ascii_classification::any) == end;
     }
@@ -571,8 +573,8 @@ struct ascii_is_any_fn
 
 struct ascii_is_digit_fn
 {
-    template <typename In>
-    static inline constexpr bool operator()(In begin, In end)
+    template <typename In, typename End>
+    static inline constexpr bool operator()(In begin, End end)
     {
         return ascii_find_first_not_of_fn::operator()(begin, end, ascii_classification::digit) == end;
     }
@@ -586,8 +588,8 @@ struct ascii_is_digit_fn
 
 struct ascii_is_bit_fn
 {
-    template <typename In>
-    static inline constexpr bool operator()(In begin, In end)
+    template <typename In, typename End>
+    static inline constexpr bool operator()(In begin, End end)
     {
         return ascii_find_first_not_of_fn::operator()(begin, end, ascii_classification::bit) == end;
     }
@@ -601,8 +603,8 @@ struct ascii_is_bit_fn
 
 struct ascii_is_octal_digit_fn
 {
-    template <typename In>
-    static inline constexpr bool operator()(In begin, In end)
+    template <typename In, typename End>
+    static inline constexpr bool operator()(In begin, End end)
     {
         return ascii_find_first_not_of_fn::operator()(begin, end, ascii_classification::octal_digit) == end;
     }
@@ -616,8 +618,8 @@ struct ascii_is_octal_digit_fn
 
 struct ascii_is_hex_digit_fn
 {
-    template <typename In>
-    static inline constexpr bool operator()(In begin, In end)
+    template <typename In, typename End>
+    static inline constexpr bool operator()(In begin, End end)
     {
         return ascii_find_first_not_of_fn::operator()(begin, end, ascii_classification::hex_digit) == end;
     }
@@ -631,8 +633,8 @@ struct ascii_is_hex_digit_fn
 
 struct ascii_is_lower_fn
 {
-    template <typename In>
-    static inline constexpr bool operator()(In begin, In end)
+    template <typename In, typename End>
+    static inline constexpr bool operator()(In begin, End end)
     {
         return ascii_find_first_not_of_fn::operator()(begin, end, ascii_classification::lower) == end;
     }
@@ -646,8 +648,8 @@ struct ascii_is_lower_fn
 
 struct ascii_is_upper_fn
 {
-    template <typename In>
-    static inline constexpr bool operator()(In begin, In end)
+    template <typename In, typename End>
+    static inline constexpr bool operator()(In begin, End end)
     {
         return ascii_find_first_not_of_fn::operator()(begin, end, ascii_classification::upper) == end;
     }
@@ -661,8 +663,8 @@ struct ascii_is_upper_fn
 
 struct ascii_is_alphabetic_fn
 {
-    template <typename In>
-    static inline constexpr bool operator()(In begin, In end)
+    template <typename In, typename End>
+    static inline constexpr bool operator()(In begin, End end)
     {
         return ascii_find_first_not_of_fn::operator()(begin, end, ascii_classification::alphabetic) == end;
     }
@@ -676,8 +678,8 @@ struct ascii_is_alphabetic_fn
 
 struct ascii_is_alphanumeric_fn
 {
-    template <typename In>
-    static inline constexpr bool operator()(In begin, In end)
+    template <typename In, typename End>
+    static inline constexpr bool operator()(In begin, End end)
     {
         return ascii_find_first_not_of_fn::operator()(begin, end, ascii_classification::alphanumeric) == end;
     }
@@ -691,8 +693,8 @@ struct ascii_is_alphanumeric_fn
 
 struct ascii_is_punctuation_fn
 {
-    template <typename In>
-    static inline constexpr bool operator()(In begin, In end)
+    template <typename In, typename End>
+    static inline constexpr bool operator()(In begin, End end)
     {
         return ascii_find_first_not_of_fn::operator()(begin, end, ascii_classification::punctuation) == end;
     }
@@ -706,8 +708,8 @@ struct ascii_is_punctuation_fn
 
 struct ascii_is_graphic_fn
 {
-    template <typename In>
-    static inline constexpr bool operator()(In begin, In end)
+    template <typename In, typename End>
+    static inline constexpr bool operator()(In begin, End end)
     {
         return ascii_find_first_not_of_fn::operator()(begin, end, ascii_classification::graphic) == end;
     }
@@ -721,8 +723,8 @@ struct ascii_is_graphic_fn
 
 struct ascii_is_printing_fn
 {
-    template <typename In>
-    static inline constexpr bool operator()(In begin, In end)
+    template <typename In, typename End>
+    static inline constexpr bool operator()(In begin, End end)
     {
         return ascii_find_first_not_of_fn::operator()(begin, end, ascii_classification::printing) == end;
     }
@@ -736,8 +738,8 @@ struct ascii_is_printing_fn
 
 struct ascii_is_horizontal_whitespace_fn
 {
-    template <typename In>
-    static inline constexpr bool operator()(In begin, In end)
+    template <typename In, typename End>
+    static inline constexpr bool operator()(In begin, End end)
     {
         return ascii_find_first_not_of_fn::operator()(begin, end, ascii_classification::horizontal_whitespace) == end;
     }
@@ -751,8 +753,8 @@ struct ascii_is_horizontal_whitespace_fn
 
 struct ascii_is_whitespace_fn
 {
-    template <typename In>
-    static inline constexpr bool operator()(In begin, In end)
+    template <typename In, typename End>
+    static inline constexpr bool operator()(In begin, End end)
     {
         return ascii_find_first_not_of_fn::operator()(begin, end, ascii_classification::whitespace) == end;
     }
@@ -766,8 +768,8 @@ struct ascii_is_whitespace_fn
 
 struct ascii_is_control_fn
 {
-    template <typename In>
-    static inline constexpr bool operator()(In begin, In end)
+    template <typename In, typename End>
+    static inline constexpr bool operator()(In begin, End end)
     {
         return ascii_find_first_not_of_fn::operator()(begin, end, ascii_classification::control) == end;
     }
@@ -781,16 +783,17 @@ struct ascii_is_control_fn
 
 struct ascii_to_lower_copy_fn
 {
-    template <typename In, typename Out>
-    static inline constexpr Out operator()(In begin, In end, Out out)
+    template <typename In, typename End, typename Out>
+    static inline constexpr Out operator()(In begin, End end, Out out)
     {
         using in_char = std::remove_cv_t<std::iter_value_t<In>>;
 
         static_assert(std::contiguous_iterator<In>);
+        static_assert(std::sized_sentinel_for<End, In>);
         static_assert(detail::is_supported_ascii_char_v<in_char>);
 
         auto p = detail::to_address_const(begin);
-        auto e = detail::to_address_const(end);
+        auto e = detail::to_address_const(begin + (end - begin));
         return detail::to_lower_ptr(p, e, out);
     }
 
@@ -804,15 +807,16 @@ struct ascii_to_lower_copy_fn
 struct ascii_to_lower_fn
 {
 
-    template <typename InOut>
-    static inline constexpr void operator()(InOut begin, InOut end)
+    template <typename InOut, typename End>
+    static inline constexpr void operator()(InOut begin, End end)
     {
         detail::static_assert_mutable_contiguous<InOut>();
+        static_assert(std::sized_sentinel_for<End, InOut>);
 
         using in_char = std::remove_cv_t<std::iter_value_t<InOut>>;
 
         auto p = std::to_address(begin);
-        auto e = std::to_address(end);
+        auto e = std::to_address(begin + (end - begin));
         detail::to_lower_inplace_ptr(p, e);
     }
 
@@ -825,16 +829,17 @@ struct ascii_to_lower_fn
 
 struct ascii_to_upper_copy_fn
 {
-    template <typename In, typename Out>
-    static inline constexpr Out operator()(In begin, In end, Out out)
+    template <typename In, typename End, typename Out>
+    static inline constexpr Out operator()(In begin, End end, Out out)
     {
         using in_char = std::remove_cv_t<std::iter_value_t<In>>;
 
         static_assert(std::contiguous_iterator<In>);
+        static_assert(std::sized_sentinel_for<End, In>);
         static_assert(detail::is_supported_ascii_char_v<in_char>);
 
         auto p = detail::to_address_const(begin);
-        auto e = detail::to_address_const(end);
+        auto e = detail::to_address_const(begin + (end - begin));
         return detail::to_upper_ptr(p, e, out);
     }
 
@@ -848,15 +853,16 @@ struct ascii_to_upper_copy_fn
 struct ascii_to_upper_fn
 {
 
-    template <typename InOut>
-    static inline constexpr void operator()(InOut begin, InOut end)
+    template <typename InOut, typename End>
+    static inline constexpr void operator()(InOut begin, End end)
     {
         detail::static_assert_mutable_contiguous<InOut>();
+        static_assert(std::sized_sentinel_for<End, InOut>);
 
         using in_char = std::remove_cv_t<std::iter_value_t<InOut>>;
 
         auto p = std::to_address(begin);
-        auto e = std::to_address(end);
+        auto e = std::to_address(begin + (end - begin));
         detail::to_upper_inplace_ptr(p, e);
     }
 
@@ -869,21 +875,23 @@ struct ascii_to_upper_fn
 
 struct ascii_case_insensitive_compare_fn
 {
-    template <typename In1, typename In2>
-    static inline constexpr std::strong_ordering operator()(In1 b1, In1 e1, In2 b2, In2 e2)
+    template <typename In1, typename End1, typename In2, typename End2>
+    static inline constexpr std::strong_ordering operator()(In1 b1, End1 e1, In2 b2, End2 e2)
     {
         using c1 = std::remove_cv_t<std::iter_value_t<In1>>;
         using c2 = std::remove_cv_t<std::iter_value_t<In2>>;
 
         static_assert(std::contiguous_iterator<In1>);
         static_assert(std::contiguous_iterator<In2>);
+        static_assert(std::sized_sentinel_for<End1, In1>);
+        static_assert(std::sized_sentinel_for<End2, In2>);
         static_assert(detail::is_supported_ascii_char_v<c1>);
         static_assert(detail::is_supported_ascii_char_v<c2>);
 
         auto p1 = detail::to_address_const(b1);
-        auto end1 = detail::to_address_const(e1);
+        auto end1 = detail::to_address_const(b1 + (e1 - b1));
         auto p2 = detail::to_address_const(b2);
-        auto end2 = detail::to_address_const(e2);
+        auto end2 = detail::to_address_const(b2 + (e2 - b2));
         return detail::case_insensitive_compare_ptr(p1, end1, p2, end2);
     }
 
@@ -896,11 +904,13 @@ struct ascii_case_insensitive_compare_fn
 
 struct ascii_case_insensitive_equals_fn
 {
-    template <typename In1, typename In2>
-    static inline constexpr bool operator()(In1 b1, In1 e1, In2 b2, In2 e2)
+    template <typename In1, typename End1, typename In2, typename End2>
+    static inline constexpr bool operator()(In1 b1, End1 e1, In2 b2, End2 e2)
     {
         static_assert(std::contiguous_iterator<In1>);
         static_assert(std::contiguous_iterator<In2>);
+        static_assert(std::sized_sentinel_for<End1, In1>);
+        static_assert(std::sized_sentinel_for<End2, In2>);
 
         if (e1 - b1 != e2 - b2)
             return false;

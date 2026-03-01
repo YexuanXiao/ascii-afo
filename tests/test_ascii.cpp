@@ -44,6 +44,53 @@ using ascii_test_vectors::find_vector;
 using ascii_test_vectors::map_vector;
 using ascii_test_vectors::ordering;
 
+template <typename Ptr>
+struct sized_input_sentinel
+{
+    Ptr last{};
+};
+
+template <typename Ptr>
+constexpr bool operator==(Ptr it, sized_input_sentinel<Ptr> s) noexcept
+{
+    return it == s.last;
+}
+
+template <typename Ptr>
+constexpr bool operator==(sized_input_sentinel<Ptr> s, Ptr it) noexcept
+{
+    return it == s.last;
+}
+
+template <typename Ptr>
+constexpr std::ptrdiff_t operator-(sized_input_sentinel<Ptr> s, Ptr it) noexcept
+{
+    return s.last - it;
+}
+
+template <typename Ptr>
+constexpr std::ptrdiff_t operator-(Ptr it, sized_input_sentinel<Ptr> s) noexcept
+{
+    return it - s.last;
+}
+
+template <typename Ptr>
+struct sized_sentinel_range
+{
+    Ptr first{};
+    sized_input_sentinel<Ptr> last{};
+
+    constexpr Ptr begin() const noexcept
+    {
+        return first;
+    }
+
+    constexpr sized_input_sentinel<Ptr> end() const noexcept
+    {
+        return last;
+    }
+};
+
 [[nodiscard]] ordering to_ordering(std::strong_ordering o)
 {
     if (o == std::strong_ordering::less)
@@ -346,6 +393,62 @@ void check_compare()
     }
 }
 
+void check_sized_sentinel_support()
+{
+    {
+        constexpr char bad_hex[] = "deadBEEG";
+        auto begin = bad_hex;
+        sized_input_sentinel<char const *> end{bad_hex + 8};
+        sized_sentinel_range<char const *> rng{begin, end};
+
+        auto it_first = bizwen::ascii_find_first_not_of(begin, end, bizwen::ascii_classification::hex_digit);
+        auto it_first_rg = bizwen::ascii_find_first_not_of(rng, bizwen::ascii_classification::hex_digit);
+        assert(it_first == begin + 7);
+        assert(it_first_rg == begin + 7);
+
+        auto it_last = bizwen::ascii_find_last_not_of(begin, end, bizwen::ascii_classification::hex_digit);
+        auto it_last_rg = bizwen::ascii_find_last_not_of(rng, bizwen::ascii_classification::hex_digit);
+        assert(it_last == begin + 7);
+        assert(it_last_rg == begin + 7);
+
+        assert(!bizwen::ascii_is_hex_digit(begin, end));
+        assert(!bizwen::ascii_is_hex_digit(rng));
+    }
+
+    {
+        char s[] = "AbC";
+        auto begin = s;
+        sized_input_sentinel<char *> end{s + 3};
+        sized_sentinel_range<char *> rng{begin, end};
+
+        std::array<char, 3> out{};
+        auto out_end = bizwen::ascii_to_lower_copy(begin, end, out.begin());
+        assert(out_end == out.end());
+        assert(out[0] == 'a' && out[1] == 'b' && out[2] == 'c');
+
+        std::array<char, 3> out_rg{};
+        auto out_rg_end = bizwen::ascii_to_lower_copy(rng, out_rg.begin());
+        assert(out_rg_end == out_rg.end());
+        assert(out_rg[0] == 'a' && out_rg[1] == 'b' && out_rg[2] == 'c');
+
+        bizwen::ascii_to_lower(begin, end);
+        assert(std::string_view(s, 3) == "abc");
+    }
+
+    {
+        constexpr char lhs[] = "AbC";
+        constexpr char rhs[] = "aBc";
+        sized_input_sentinel<char const *> lhs_end{lhs + 3};
+        sized_input_sentinel<char const *> rhs_end{rhs + 3};
+        sized_sentinel_range<char const *> lhs_rng{lhs, lhs_end};
+        sized_sentinel_range<char const *> rhs_rng{rhs, rhs_end};
+
+        assert(bizwen::ascii_case_insensitive_compare(lhs, lhs_end, rhs, rhs_end) == std::strong_ordering::equal);
+        assert(bizwen::ascii_case_insensitive_equals(lhs, lhs_end, rhs, rhs_end));
+        assert(bizwen::ascii_case_insensitive_equals(lhs_rng, rhs_rng));
+    }
+}
+
 } // namespace
 
 int main()
@@ -353,4 +456,5 @@ int main()
     check_find();
     check_mapping();
     check_compare();
+    check_sized_sentinel_support();
 }
