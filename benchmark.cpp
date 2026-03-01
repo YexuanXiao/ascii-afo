@@ -9,7 +9,7 @@
 #include <string_view>
 #include <vector>
 
-#include "./benchmark.hpp"
+#include "./ascii.hpp"
 
 namespace
 {
@@ -28,35 +28,35 @@ template <bizwen::ascii_classification Cls>
 constexpr table_predicate_t table_predicate() noexcept
 {
     if constexpr (Cls == bizwen::ascii_classification::any)
-        return is_ascii_any_u8;
+        return bizwen::detail::is_ascii_u8;
     else if constexpr (Cls == bizwen::ascii_classification::digit)
-        return is_ascii_digit_u8;
+        return bizwen::detail::is_digit_u8;
     else if constexpr (Cls == bizwen::ascii_classification::bit)
-        return is_ascii_bit_u8;
+        return bizwen::detail::is_bit_u8;
     else if constexpr (Cls == bizwen::ascii_classification::octal_digit)
-        return is_ascii_octal_digit_u8;
+        return bizwen::detail::is_octal_digit_u8;
     else if constexpr (Cls == bizwen::ascii_classification::hex_digit)
-        return is_ascii_hex_digit_u8;
+        return bizwen::detail::is_hex_digit_u8;
     else if constexpr (Cls == bizwen::ascii_classification::lower)
-        return is_ascii_lower_u8;
+        return bizwen::detail::is_lower_u8;
     else if constexpr (Cls == bizwen::ascii_classification::upper)
-        return is_ascii_upper_u8;
+        return bizwen::detail::is_upper_u8;
     else if constexpr (Cls == bizwen::ascii_classification::alphabetic)
-        return is_ascii_alphabetic_u8;
+        return bizwen::detail::is_alphabetic_u8;
     else if constexpr (Cls == bizwen::ascii_classification::alphanumeric)
-        return is_ascii_alphanumeric_u8;
+        return bizwen::detail::is_alphanumeric_u8;
     else if constexpr (Cls == bizwen::ascii_classification::punctuation)
-        return is_ascii_punctuation_u8;
+        return bizwen::detail::is_punctuation_u8;
     else if constexpr (Cls == bizwen::ascii_classification::graphic)
-        return is_ascii_graphic_u8;
+        return bizwen::detail::is_graphic_u8;
     else if constexpr (Cls == bizwen::ascii_classification::printing)
-        return is_ascii_printing_u8;
+        return bizwen::detail::is_printing_u8;
     else if constexpr (Cls == bizwen::ascii_classification::horizontal_whitespace)
-        return is_ascii_horizontal_whitespace_u8;
+        return bizwen::detail::is_horizontal_whitespace_u8;
     else if constexpr (Cls == bizwen::ascii_classification::whitespace)
-        return is_ascii_whitespace_u8;
+        return bizwen::detail::is_whitespace_u8;
     else if constexpr (Cls == bizwen::ascii_classification::control)
-        return is_ascii_control_u8;
+        return bizwen::detail::is_control_u8;
     else
         static_assert(Cls == bizwen::ascii_classification::any, "unhandled ascii_classification");
 }
@@ -192,35 +192,35 @@ void BM_ranges_find_if_not_table_lambda(benchmark::State &state)
 
     auto pred = [](auto c) noexcept -> bool {
         if constexpr (Cls == bizwen::ascii_classification::any)
-            return is_ascii_any_u8(static_cast<char8_t>(c));
+            return bizwen::detail::is_ascii_u8(static_cast<char8_t>(c));
         else if constexpr (Cls == bizwen::ascii_classification::digit)
-            return is_ascii_digit_u8(static_cast<char8_t>(c));
+            return bizwen::detail::is_digit_u8(static_cast<char8_t>(c));
         else if constexpr (Cls == bizwen::ascii_classification::bit)
-            return is_ascii_bit_u8(static_cast<char8_t>(c));
+            return bizwen::detail::is_bit_u8(static_cast<char8_t>(c));
         else if constexpr (Cls == bizwen::ascii_classification::octal_digit)
-            return is_ascii_octal_digit_u8(static_cast<char8_t>(c));
+            return bizwen::detail::is_octal_digit_u8(static_cast<char8_t>(c));
         else if constexpr (Cls == bizwen::ascii_classification::hex_digit)
-            return is_ascii_hex_digit_u8(static_cast<char8_t>(c));
+            return bizwen::detail::is_hex_digit_u8(static_cast<char8_t>(c));
         else if constexpr (Cls == bizwen::ascii_classification::lower)
-            return is_ascii_lower_u8(static_cast<char8_t>(c));
+            return bizwen::detail::is_lower_u8(static_cast<char8_t>(c));
         else if constexpr (Cls == bizwen::ascii_classification::upper)
-            return is_ascii_upper_u8(static_cast<char8_t>(c));
+            return bizwen::detail::is_upper_u8(static_cast<char8_t>(c));
         else if constexpr (Cls == bizwen::ascii_classification::alphabetic)
-            return is_ascii_alphabetic_u8(static_cast<char8_t>(c));
+            return bizwen::detail::is_alphabetic_u8(static_cast<char8_t>(c));
         else if constexpr (Cls == bizwen::ascii_classification::alphanumeric)
-            return is_ascii_alphanumeric_u8(static_cast<char8_t>(c));
+            return bizwen::detail::is_alphanumeric_u8(static_cast<char8_t>(c));
         else if constexpr (Cls == bizwen::ascii_classification::punctuation)
-            return is_ascii_punctuation_u8(static_cast<char8_t>(c));
+            return bizwen::detail::is_punctuation_u8(static_cast<char8_t>(c));
         else if constexpr (Cls == bizwen::ascii_classification::graphic)
-            return is_ascii_graphic_u8(static_cast<char8_t>(c));
+            return bizwen::detail::is_graphic_u8(static_cast<char8_t>(c));
         else if constexpr (Cls == bizwen::ascii_classification::printing)
-            return is_ascii_printing_u8(static_cast<char8_t>(c));
+            return bizwen::detail::is_printing_u8(static_cast<char8_t>(c));
         else if constexpr (Cls == bizwen::ascii_classification::horizontal_whitespace)
-            return is_ascii_horizontal_whitespace_u8(static_cast<char8_t>(c));
+            return bizwen::detail::is_horizontal_whitespace_u8(static_cast<char8_t>(c));
         else if constexpr (Cls == bizwen::ascii_classification::whitespace)
-            return is_ascii_whitespace_u8(static_cast<char8_t>(c));
+            return bizwen::detail::is_whitespace_u8(static_cast<char8_t>(c));
         else if constexpr (Cls == bizwen::ascii_classification::control)
-            return is_ascii_control_u8(static_cast<char8_t>(c));
+            return bizwen::detail::is_control_u8(static_cast<char8_t>(c));
         else
             static_assert(Cls == bizwen::ascii_classification::any, "unhandled ascii_classification");
     };

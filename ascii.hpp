@@ -39,13 +39,13 @@ BIZWEN_EXPORT enum class ascii_classification : detail::cls_base_t
     digit = 1u << 1,
     bit = 1u << 2,
     octal_digit = 1u << 3,
-    hex_digit = 1u << 4,
-    lower = 1u << 5,
-    upper = 1u << 6,
-    alphabetic = 1u << 7,
-    alphanumeric = 1u << 8,
-    punctuation = 1u << 9,
-    graphic = 1u << 10,
+    lower = 1u << 4,
+    upper = 1u << 5,
+    graphic = 1u << 6,
+    hex_digit = 1u << 7,
+    alphabetic = 1u << 8,
+    alphanumeric = 1u << 9,
+    punctuation = 1u << 10,
     printing = 1u << 11,
     horizontal_whitespace = 1u << 12,
     whitespace = 1u << 13,
@@ -77,7 +77,7 @@ inline constexpr bool is_supported_ascii_char_v =
 //
 // The primary ascii_find_* algorithms scan the input range and return an iterator to the first/last byte that is
 // not in the requested classification:
-// (class_table[byte] & required_mask) == 0
+// (class_table[byte] & required_mask) == 0 (for most classifications; some hot paths use naive comparisons)
 //
 // ascii_is_* functions are thin wrappers equivalent to:
 // ascii_find_first_not_of(mask, begin, end) == end
@@ -87,13 +87,13 @@ inline constexpr detail::cls_base_t ascii_class_any = 1u << 0;
 inline constexpr detail::cls_base_t ascii_class_digit = 1u << 1;
 inline constexpr detail::cls_base_t ascii_class_bit = 1u << 2;
 inline constexpr detail::cls_base_t ascii_class_octal_digit = 1u << 3;
-inline constexpr detail::cls_base_t ascii_class_hex_digit = 1u << 4;
-inline constexpr detail::cls_base_t ascii_class_lower = 1u << 5;
-inline constexpr detail::cls_base_t ascii_class_upper = 1u << 6;
-inline constexpr detail::cls_base_t ascii_class_alphabetic = 1u << 7;
-inline constexpr detail::cls_base_t ascii_class_alphanumeric = 1u << 8;
-inline constexpr detail::cls_base_t ascii_class_punctuation = 1u << 9;
-inline constexpr detail::cls_base_t ascii_class_graphic = 1u << 10;
+inline constexpr detail::cls_base_t ascii_class_lower = 1u << 4;
+inline constexpr detail::cls_base_t ascii_class_upper = 1u << 5;
+inline constexpr detail::cls_base_t ascii_class_graphic = 1u << 6;
+inline constexpr detail::cls_base_t ascii_class_hex_digit = 1u << 7;
+inline constexpr detail::cls_base_t ascii_class_alphabetic = 1u << 8;
+inline constexpr detail::cls_base_t ascii_class_alphanumeric = 1u << 9;
+inline constexpr detail::cls_base_t ascii_class_punctuation = 1u << 10;
 inline constexpr detail::cls_base_t ascii_class_printing = 1u << 11;
 inline constexpr detail::cls_base_t ascii_class_horizontal_whitespace = 1u << 12;
 inline constexpr detail::cls_base_t ascii_class_whitespace = 1u << 13;
@@ -139,12 +139,12 @@ inline constexpr std::array<char8_t, 256> upper_table = {
 inline constexpr std::array<detail::cls_base_t, 256> class_table = {
     0x4001, 0x4001, 0x4001, 0x4001, 0x4001, 0x4001, 0x4001, 0x4001, 0x4001, 0x7001, 0x6001, 0x6001, 0x6001, 0x6001, 0x4001, 0x4001,
     0x4001, 0x4001, 0x4001, 0x4001, 0x4001, 0x4001, 0x4001, 0x4001, 0x4001, 0x4001, 0x4001, 0x4001, 0x4001, 0x4001, 0x4001, 0x4001,
-    0x3801, 0x0E01, 0x0E01, 0x0E01, 0x0E01, 0x0E01, 0x0E01, 0x0E01, 0x0E01, 0x0E01, 0x0E01, 0x0E01, 0x0E01, 0x0E01, 0x0E01, 0x0E01,
-    0x0D1F, 0x0D1F, 0x0D1B, 0x0D1B, 0x0D1B, 0x0D1B, 0x0D1B, 0x0D1B, 0x0D13, 0x0D13, 0x0E01, 0x0E01, 0x0E01, 0x0E01, 0x0E01, 0x0E01,
-    0x0E01, 0x0DD1, 0x0DD1, 0x0DD1, 0x0DD1, 0x0DD1, 0x0DD1, 0x0DC1, 0x0DC1, 0x0DC1, 0x0DC1, 0x0DC1, 0x0DC1, 0x0DC1, 0x0DC1, 0x0DC1,
-    0x0DC1, 0x0DC1, 0x0DC1, 0x0DC1, 0x0DC1, 0x0DC1, 0x0DC1, 0x0DC1, 0x0DC1, 0x0DC1, 0x0DC1, 0x0E01, 0x0E01, 0x0E01, 0x0E01, 0x0E01,
-    0x0E01, 0x0DB1, 0x0DB1, 0x0DB1, 0x0DB1, 0x0DB1, 0x0DB1, 0x0DA1, 0x0DA1, 0x0DA1, 0x0DA1, 0x0DA1, 0x0DA1, 0x0DA1, 0x0DA1, 0x0DA1,
-    0x0DA1, 0x0DA1, 0x0DA1, 0x0DA1, 0x0DA1, 0x0DA1, 0x0DA1, 0x0DA1, 0x0DA1, 0x0DA1, 0x0DA1, 0x0E01, 0x0E01, 0x0E01, 0x0E01, 0x4001,
+    0x3801, 0x0C41, 0x0C41, 0x0C41, 0x0C41, 0x0C41, 0x0C41, 0x0C41, 0x0C41, 0x0C41, 0x0C41, 0x0C41, 0x0C41, 0x0C41, 0x0C41, 0x0C41,
+    0x0ACF, 0x0ACF, 0x0ACB, 0x0ACB, 0x0ACB, 0x0ACB, 0x0ACB, 0x0ACB, 0x0AC3, 0x0AC3, 0x0C41, 0x0C41, 0x0C41, 0x0C41, 0x0C41, 0x0C41,
+    0x0C41, 0x0BE1, 0x0BE1, 0x0BE1, 0x0BE1, 0x0BE1, 0x0BE1, 0x0B61, 0x0B61, 0x0B61, 0x0B61, 0x0B61, 0x0B61, 0x0B61, 0x0B61, 0x0B61,
+    0x0B61, 0x0B61, 0x0B61, 0x0B61, 0x0B61, 0x0B61, 0x0B61, 0x0B61, 0x0B61, 0x0B61, 0x0B61, 0x0C41, 0x0C41, 0x0C41, 0x0C41, 0x0C41,
+    0x0C41, 0x0BD1, 0x0BD1, 0x0BD1, 0x0BD1, 0x0BD1, 0x0BD1, 0x0B51, 0x0B51, 0x0B51, 0x0B51, 0x0B51, 0x0B51, 0x0B51, 0x0B51, 0x0B51,
+    0x0B51, 0x0B51, 0x0B51, 0x0B51, 0x0B51, 0x0B51, 0x0B51, 0x0B51, 0x0B51, 0x0B51, 0x0B51, 0x0C41, 0x0C41, 0x0C41, 0x0C41, 0x4001,
     0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,   
     0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,   
     0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,    0x0,   
@@ -271,78 +271,105 @@ inline constexpr unsigned long ascii_lower_u32(Char c) noexcept
     return v;
 }
 
-// Convenience wrappers for classification (bit tests on `class_table`).
-inline constexpr bool is_ascii_uc(char8_t c) noexcept
+inline constexpr bool is_ascii_u8(char8_t c) noexcept
 {
+#if 0
     return (class_table[static_cast<std::size_t>(c)] & ascii_class_any) != 0;
+#else
+    return c < static_cast<char8_t>(0x80);
+#endif
 }
 
-inline constexpr bool is_digit_uc(char8_t c) noexcept
+inline constexpr bool is_digit_u8(char8_t c) noexcept
 {
+#if 0
     return (class_table[static_cast<std::size_t>(c)] & ascii_class_digit) != 0;
+#else
+    return c >= u8'0' && c <= u8'9';
+#endif
 }
 
-inline constexpr bool is_bit_uc(char8_t c) noexcept
+inline constexpr bool is_bit_u8(char8_t c) noexcept
 {
+#if 0
     return (class_table[static_cast<std::size_t>(c)] & ascii_class_bit) != 0;
+#else
+    return c == u8'0' || c == u8'1';
+#endif
 }
 
-inline constexpr bool is_octal_digit_uc(char8_t c) noexcept
+inline constexpr bool is_octal_digit_u8(char8_t c) noexcept
 {
+#if 0
     return (class_table[static_cast<std::size_t>(c)] & ascii_class_octal_digit) != 0;
+#else
+    return c >= u8'0' && c <= u8'7';
+#endif
 }
 
-inline constexpr bool is_hex_digit_uc(char8_t c) noexcept
+inline constexpr bool is_hex_digit_u8(char8_t c) noexcept
 {
     return (class_table[static_cast<std::size_t>(c)] & ascii_class_hex_digit) != 0;
 }
 
-inline constexpr bool is_lower_uc(char8_t c) noexcept
+inline constexpr bool is_lower_u8(char8_t c) noexcept
 {
+#if 0
     return (class_table[static_cast<std::size_t>(c)] & ascii_class_lower) != 0;
+#else
+    return c >= u8'a' && c <= u8'z';
+#endif
 }
 
-inline constexpr bool is_upper_uc(char8_t c) noexcept
+inline constexpr bool is_upper_u8(char8_t c) noexcept
 {
+#if 0
     return (class_table[static_cast<std::size_t>(c)] & ascii_class_upper) != 0;
+#else
+    return c >= u8'A' && c <= u8'Z';
+#endif
 }
 
-inline constexpr bool is_alphabetic_uc(char8_t c) noexcept
+inline constexpr bool is_alphabetic_u8(char8_t c) noexcept
 {
     return (class_table[static_cast<std::size_t>(c)] & ascii_class_alphabetic) != 0;
 }
 
-inline constexpr bool is_alphanumeric_uc(char8_t c) noexcept
+inline constexpr bool is_alphanumeric_u8(char8_t c) noexcept
 {
     return (class_table[static_cast<std::size_t>(c)] & ascii_class_alphanumeric) != 0;
 }
 
-inline constexpr bool is_punctuation_uc(char8_t c) noexcept
+inline constexpr bool is_punctuation_u8(char8_t c) noexcept
 {
     return (class_table[static_cast<std::size_t>(c)] & ascii_class_punctuation) != 0;
 }
 
-inline constexpr bool is_graphic_uc(char8_t c) noexcept
+inline constexpr bool is_graphic_u8(char8_t c) noexcept
 {
+#if 0
     return (class_table[static_cast<std::size_t>(c)] & ascii_class_graphic) != 0;
+#else
+    return c >= u8'!' && c <= u8'~';
+#endif
 }
 
-inline constexpr bool is_printing_uc(char8_t c) noexcept
+inline constexpr bool is_printing_u8(char8_t c) noexcept
 {
     return (class_table[static_cast<std::size_t>(c)] & ascii_class_printing) != 0;
 }
 
-inline constexpr bool is_horizontal_whitespace_uc(char8_t c) noexcept
+inline constexpr bool is_horizontal_whitespace_u8(char8_t c) noexcept
 {
     return (class_table[static_cast<std::size_t>(c)] & ascii_class_horizontal_whitespace) != 0;
 }
 
-inline constexpr bool is_whitespace_uc(char8_t c) noexcept
+inline constexpr bool is_whitespace_u8(char8_t c) noexcept
 {
     return (class_table[static_cast<std::size_t>(c)] & ascii_class_whitespace) != 0;
 }
 
-inline constexpr bool is_control_uc(char8_t c) noexcept
+inline constexpr bool is_control_u8(char8_t c) noexcept
 {
     return (class_table[static_cast<std::size_t>(c)] & ascii_class_control) != 0;
 }
@@ -354,27 +381,154 @@ inline constexpr InChar const *find_first_not_of_mask_ptr(InChar const *begin, I
 
     if constexpr (sizeof(in_char) == 1)
     {
-        for (auto p = begin; p != end; ++p)
+        switch (required)
         {
-            auto idx = static_cast<std::size_t>(static_cast<char8_t>(*p));
-            if ((class_table[idx] & required) == 0)
-                return p;
+        case ascii_class_any:
+            for (auto p = begin; p != end; ++p)
+            {
+                if (!is_ascii_u8(static_cast<char8_t>(*p)))
+                    return p;
+            }
+            return end;
+        case ascii_class_digit:
+            for (auto p = begin; p != end; ++p)
+            {
+                if (!is_digit_u8(static_cast<char8_t>(*p)))
+                    return p;
+            }
+            return end;
+        case ascii_class_bit:
+            for (auto p = begin; p != end; ++p)
+            {
+                if (!is_bit_u8(static_cast<char8_t>(*p)))
+                    return p;
+            }
+            return end;
+        case ascii_class_octal_digit:
+            for (auto p = begin; p != end; ++p)
+            {
+                if (!is_octal_digit_u8(static_cast<char8_t>(*p)))
+                    return p;
+            }
+            return end;
+        case ascii_class_lower:
+            for (auto p = begin; p != end; ++p)
+            {
+                if (!is_lower_u8(static_cast<char8_t>(*p)))
+                    return p;
+            }
+            return end;
+        case ascii_class_upper:
+            for (auto p = begin; p != end; ++p)
+            {
+                if (!is_upper_u8(static_cast<char8_t>(*p)))
+                    return p;
+            }
+            return end;
+        case ascii_class_graphic:
+            for (auto p = begin; p != end; ++p)
+            {
+                if (!is_graphic_u8(static_cast<char8_t>(*p)))
+                    return p;
+            }
+            return end;
+        default:
+            for (auto p = begin; p != end; ++p)
+            {
+                auto idx = static_cast<std::size_t>(static_cast<char8_t>(*p));
+                if ((class_table[idx] & required) == 0)
+                    return p;
+            }
+            return end;
         }
     }
     else
     {
-        for (auto p = begin; p != end; ++p)
+        switch (required)
         {
-            auto v = static_cast<unsigned long>(*p);
-            if (v > 0xFF)
-                return p;
-            auto idx = static_cast<std::size_t>(v);
-            if ((class_table[idx] & required) == 0)
-                return p;
+        case ascii_class_any:
+            for (auto p = begin; p != end; ++p)
+            {
+                auto v = static_cast<unsigned long>(*p);
+                if (v > 0xFF)
+                    return p;
+                if (!is_ascii_u8(static_cast<char8_t>(v)))
+                    return p;
+            }
+            return end;
+        case ascii_class_digit:
+            for (auto p = begin; p != end; ++p)
+            {
+                auto v = static_cast<unsigned long>(*p);
+                if (v > 0xFF)
+                    return p;
+                if (!is_digit_u8(static_cast<char8_t>(v)))
+                    return p;
+            }
+            return end;
+        case ascii_class_bit:
+            for (auto p = begin; p != end; ++p)
+            {
+                auto v = static_cast<unsigned long>(*p);
+                if (v > 0xFF)
+                    return p;
+                if (!is_bit_u8(static_cast<char8_t>(v)))
+                    return p;
+            }
+            return end;
+        case ascii_class_octal_digit:
+            for (auto p = begin; p != end; ++p)
+            {
+                auto v = static_cast<unsigned long>(*p);
+                if (v > 0xFF)
+                    return p;
+                if (!is_octal_digit_u8(static_cast<char8_t>(v)))
+                    return p;
+            }
+            return end;
+        case ascii_class_lower:
+            for (auto p = begin; p != end; ++p)
+            {
+                auto v = static_cast<unsigned long>(*p);
+                if (v > 0xFF)
+                    return p;
+                if (!is_lower_u8(static_cast<char8_t>(v)))
+                    return p;
+            }
+            return end;
+        case ascii_class_upper:
+            for (auto p = begin; p != end; ++p)
+            {
+                auto v = static_cast<unsigned long>(*p);
+                if (v > 0xFF)
+                    return p;
+                if (!is_upper_u8(static_cast<char8_t>(v)))
+                    return p;
+            }
+            return end;
+        case ascii_class_graphic:
+            for (auto p = begin; p != end; ++p)
+            {
+                auto v = static_cast<unsigned long>(*p);
+                if (v > 0xFF)
+                    return p;
+                if (!is_graphic_u8(static_cast<char8_t>(v)))
+                    return p;
+            }
+            return end;
+        default:
+            for (auto p = begin; p != end; ++p)
+            {
+                auto v = static_cast<unsigned long>(*p);
+                if (v > 0xFF)
+                    return p;
+                auto idx = static_cast<std::size_t>(v);
+                if ((class_table[idx] & required) == 0)
+                    return p;
+            }
+            return end;
         }
     }
-
-    return end;
 }
 
 template <typename InChar>
@@ -384,29 +538,170 @@ inline constexpr InChar const *find_last_not_of_mask_ptr(InChar const *begin, In
 
     if constexpr (sizeof(in_char) == 1)
     {
-        for (auto p = end; p != begin;)
+        switch (required)
         {
-            --p;
-            auto idx = static_cast<std::size_t>(static_cast<char8_t>(*p));
-            if ((class_table[idx] & required) == 0)
-                return p;
+        case ascii_class_any:
+            for (auto p = end; p != begin;)
+            {
+                --p;
+                if (!is_ascii_u8(static_cast<char8_t>(*p)))
+                    return p;
+            }
+            return end;
+        case ascii_class_digit:
+            for (auto p = end; p != begin;)
+            {
+                --p;
+                if (!is_digit_u8(static_cast<char8_t>(*p)))
+                    return p;
+            }
+            return end;
+        case ascii_class_bit:
+            for (auto p = end; p != begin;)
+            {
+                --p;
+                if (!is_bit_u8(static_cast<char8_t>(*p)))
+                    return p;
+            }
+            return end;
+        case ascii_class_octal_digit:
+            for (auto p = end; p != begin;)
+            {
+                --p;
+                if (!is_octal_digit_u8(static_cast<char8_t>(*p)))
+                    return p;
+            }
+            return end;
+        case ascii_class_lower:
+            for (auto p = end; p != begin;)
+            {
+                --p;
+                if (!is_lower_u8(static_cast<char8_t>(*p)))
+                    return p;
+            }
+            return end;
+        case ascii_class_upper:
+            for (auto p = end; p != begin;)
+            {
+                --p;
+                if (!is_upper_u8(static_cast<char8_t>(*p)))
+                    return p;
+            }
+            return end;
+        case ascii_class_graphic:
+            for (auto p = end; p != begin;)
+            {
+                --p;
+                if (!is_graphic_u8(static_cast<char8_t>(*p)))
+                    return p;
+            }
+            return end;
+        default:
+            for (auto p = end; p != begin;)
+            {
+                --p;
+                auto idx = static_cast<std::size_t>(static_cast<char8_t>(*p));
+                if ((class_table[idx] & required) == 0)
+                    return p;
+            }
+            return end;
         }
     }
     else
     {
-        for (auto p = end; p != begin;)
+        switch (required)
         {
-            --p;
-            auto v = static_cast<unsigned long>(*p);
-            if (v > 0xFF)
-                return p;
-            auto idx = static_cast<std::size_t>(v);
-            if ((class_table[idx] & required) == 0)
-                return p;
+        case ascii_class_any:
+            for (auto p = end; p != begin;)
+            {
+                --p;
+                auto v = static_cast<unsigned long>(*p);
+                if (v > 0xFF)
+                    return p;
+                if (!is_ascii_u8(static_cast<char8_t>(v)))
+                    return p;
+            }
+            return end;
+        case ascii_class_digit:
+            for (auto p = end; p != begin;)
+            {
+                --p;
+                auto v = static_cast<unsigned long>(*p);
+                if (v > 0xFF)
+                    return p;
+                if (!is_digit_u8(static_cast<char8_t>(v)))
+                    return p;
+            }
+            return end;
+        case ascii_class_bit:
+            for (auto p = end; p != begin;)
+            {
+                --p;
+                auto v = static_cast<unsigned long>(*p);
+                if (v > 0xFF)
+                    return p;
+                if (!is_bit_u8(static_cast<char8_t>(v)))
+                    return p;
+            }
+            return end;
+        case ascii_class_octal_digit:
+            for (auto p = end; p != begin;)
+            {
+                --p;
+                auto v = static_cast<unsigned long>(*p);
+                if (v > 0xFF)
+                    return p;
+                if (!is_octal_digit_u8(static_cast<char8_t>(v)))
+                    return p;
+            }
+            return end;
+        case ascii_class_lower:
+            for (auto p = end; p != begin;)
+            {
+                --p;
+                auto v = static_cast<unsigned long>(*p);
+                if (v > 0xFF)
+                    return p;
+                if (!is_lower_u8(static_cast<char8_t>(v)))
+                    return p;
+            }
+            return end;
+        case ascii_class_upper:
+            for (auto p = end; p != begin;)
+            {
+                --p;
+                auto v = static_cast<unsigned long>(*p);
+                if (v > 0xFF)
+                    return p;
+                if (!is_upper_u8(static_cast<char8_t>(v)))
+                    return p;
+            }
+            return end;
+        case ascii_class_graphic:
+            for (auto p = end; p != begin;)
+            {
+                --p;
+                auto v = static_cast<unsigned long>(*p);
+                if (v > 0xFF)
+                    return p;
+                if (!is_graphic_u8(static_cast<char8_t>(v)))
+                    return p;
+            }
+            return end;
+        default:
+            for (auto p = end; p != begin;)
+            {
+                --p;
+                auto v = static_cast<unsigned long>(*p);
+                if (v > 0xFF)
+                    return p;
+                auto idx = static_cast<std::size_t>(v);
+                if ((class_table[idx] & required) == 0)
+                    return p;
+            }
+            return end;
         }
     }
-
-    return end;
 }
 
 template <typename In, typename End>
