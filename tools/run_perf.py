@@ -167,6 +167,7 @@ def generate_horizontal(clean_csv: Path, out_horizontal: Path, out_sorted: Path)
         spread = ratio(slowest_time, best_time)
 
         ascii_t = times["ascii_find_first_not_of"]
+        naive_t = times["ranges/find_if_not/naive"]
 
         ascii_bps = impls.get("ascii_find_first_not_of", {}).get("bytes_per_second", math.nan)
 
@@ -176,6 +177,7 @@ def generate_horizontal(clean_csv: Path, out_horizontal: Path, out_sorted: Path)
                 "len": length,
                 "best": best_impl,
                 "ascii_vs_best": ratio(ascii_t, best_time),
+                "ascii_vs_naive": ratio(ascii_t, naive_t),
                 "ascii_bytes_per_second": ascii_bps,
                 # Not part of the output, but kept for sorting in the "sorted" CSV.
                 "_spread_slowest_vs_best": spread,
@@ -190,6 +192,7 @@ def generate_horizontal(clean_csv: Path, out_horizontal: Path, out_sorted: Path)
         "len",
         "best",
         "ascii_vs_best",
+        "ascii_vs_naive",
         "ascii_bytes_per_second",
     ]
 
